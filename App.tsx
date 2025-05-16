@@ -34,45 +34,43 @@ function App(): React.JSX.Element {
       <Stack.Navigator 
         initialRouteName="Login"
         screenOptions={{
+          headerShown: false, // Tüm headerları gizle
+          /* Önceki header stil ayarları artık gereksiz
           headerStyle: {
-            backgroundColor: '#F5F5F7', // Açık gri header
+            backgroundColor: '#F5F5F7', 
           },
-          headerTintColor: '#1C1C1E', // Koyu başlık rengi
+          headerTintColor: '#1C1C1E', 
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          headerBackTitleVisible: false, // Geri butonunda başlık gösterme (iOS)
+          headerBackTitleVisible: false, 
+          */
         }}
       >
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
-          options={{ title: 'Avalanche Cüzdanı' }} 
+          // options içinde title artık görsel olarak görünmeyecek ama navigasyon için faydalı olabilir
         />
         <Stack.Screen 
           name="ImportWallet" 
           component={ImportWalletScreen} 
-          options={{ title: 'Cüzdanı İçe Aktar' }} 
         />
         <Stack.Screen 
           name="CreateWallet" 
           component={CreateWalletScreen} 
-          options={{ title: 'Yeni Cüzdan Oluştur' }} 
         />
         <Stack.Screen 
           name="VerifyMnemonic" 
           component={VerifyMnemonicScreen} 
-          options={{ title: 'Kelimeleri Doğrula' }} 
         />
         <Stack.Screen 
           name="WalletSummary" 
           component={WalletSummaryScreen} 
-          options={{ title: 'Cüzdan Bilgileri' }} 
         />
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-          options={{ title: 'Cüzdanım' }} 
         />
       </Stack.Navigator>
     </NavigationContainer>

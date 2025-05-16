@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Alert, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../App';
-import { generateMnemonic } from '../utils/wallet'; // wallet.ts'den fonksiyonu import ediyoruz
+import { generateMnemonic } from '../utils/wallet';
 
 type CreateWalletScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreateWallet'>;
 
@@ -12,17 +12,19 @@ type Props = {
 
 const CreateWalletScreen: React.FC<Props> = ({ navigation }) => {
   const [mnemonic, setMnemonic] = useState<string | null>(null);
-  const [showMnemonic, setShowMnemonic] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
-  const handleGenerateMnemonic = () => {
+  const handleGenerateMnemonic = async () => {
+    setIsGenerating(true);
     try {
+      // await new Promise(resolve => setTimeout(resolve, 300)); // Gecikme efekti için
       const newMnemonic = generateMnemonic();
       setMnemonic(newMnemonic);
-      setShowMnemonic(true);
     } catch (error) {
       console.error("Mnemonic oluşturulurken hata:", error);
       Alert.alert("Hata", "Kelimeler oluşturulurken bir sorun oluştu.");
     }
+    setIsGenerating(false);
   };
 
   const handleContinue = () => {
@@ -33,45 +35,65 @@ const CreateWalletScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const mnemonicWords = mnemonic ? mnemonic.split(' ') : [];
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Yeni Cüzdan Oluştur</Text>
-        
-        {!showMnemonic && (
-          <Text style={styles.infoText}>
-            Aşağıdaki butona basarak 12 gizli kurtarma kelimenizi oluşturun. Bu kelimeler cüzdanınıza erişimin tek yoludur, güvenli bir şekilde saklayın.
-          </Text>
-        )}
-
-        <View style={styles.buttonWrapper}>
-          <Button 
-            title={showMnemonic ? "Kelimeleri Gizle" : "Gizli Kelimeleri Oluştur ve Göster"} 
-            onPress={showMnemonic ? () => setShowMnemonic(false) : handleGenerateMnemonic} 
-            color={showMnemonic ? "#FF9500" : "#007AFF"} // Turuncu ve Mavi
-          />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          <Text style={styles.pageTitle}>Yeni Cüzdan Oluştur</Text>
+          
+          {!mnemonic ? (
+            <>
+              <Text style={styles.instructionsText}>
+                Aşağıdaki butona basarak 12 gizli kurtarma kelimenizi oluşturun. Bu kelimeler cüzdanınıza erişimin tek yoludur, bu yüzden onları ÇOK DİKKATLİ ve güvenli bir şekilde saklayın.
+              </Text>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.primaryButton, isGenerating && styles.buttonDisabled]} 
+                onPress={handleGenerateMnemonic}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" style={styles.activityIndicator} />
+                    <Text style={styles.buttonText}>Oluşturuluyor...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.buttonText}>Gizli Kelimeleri Oluştur</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.mnemonicHeader}>Kurtarma Kelimeleriniz:</Text>
+              <Text style={styles.mnemonicSubheader}>
+                Bu 12 kelimeyi SADECE SİZİN görebileceğiniz, güvenli bir yere (örneğin bir kağıda yazarak) doğru sırada kaydedin. ASLA dijital ortamda ekran görüntüsü almayın veya kimseyle paylaşmayın. Kaybetmeniz durumunda cüzdanınıza bir daha erişemezsiniz!
+              </Text>
+              <View style={styles.mnemonicGridContainer}>
+                {mnemonicWords.map((word, index) => (
+                  <View key={index} style={styles.wordCard}>
+                    <Text style={styles.wordIndex}>{index + 1}</Text>
+                    <Text style={styles.wordValue}>{word}</Text>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.confirmButton]} 
+                onPress={handleContinue} 
+              >
+                <Text style={styles.buttonText}>Kelimeleri Kaydettim, Devam Et</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.secondaryButton, isGenerating && styles.buttonDisabled]} 
+            onPress={() => navigation.goBack()}
+            disabled={isGenerating}
+          >
+            <Text style={styles.buttonTextSecondary}>Geri Dön</Text>
+          </TouchableOpacity>
         </View>
-
-        {showMnemonic && mnemonic && (
-          <View style={styles.mnemonicContainer}>
-            <Text style={styles.mnemonicWarning}>ÖNEMLİ: Bu kelimeleri SADECE SİZİN görebileceğiniz, güvenli bir yere (örneğin bir kağıda yazarak) kaydedin. ASLA dijital ortamda ekran görüntüsü almayın veya kimseyle paylaşmayın.</Text>
-            <Text style={styles.mnemonicText}>{mnemonic}</Text>
-          </View>
-        )}
-
-        {mnemonic && showMnemonic && (
-          <View style={styles.buttonWrapper}>
-            <Button 
-              title="Devam Et (Kelimeleri Doğrula)" 
-              onPress={handleContinue} 
-              color="#34C759" // Yeşil
-            />
-          </View>
-        )}
-        <View style={styles.buttonWrapper}>
-          <Button title="Geri Dön" onPress={() => navigation.goBack()} />
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -79,58 +101,116 @@ const CreateWalletScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: '#121212', // Koyu tema
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 20, // Üst ve alt boşluklar
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 16, // Biraz padding artırıldı
+    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 24, // Biraz büyütüldü
+  pageTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 25,
-    color: '#1C1C1E',
+    color: '#E0E0E0',
     textAlign: 'center',
   },
-  infoText: {
+  instructionsText: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#3C3C43',
-    paddingHorizontal: 10, // Yatay padding eklendi
+    marginBottom: 30,
+    color: '#AEAEB2',
+    lineHeight: 24,
+    paddingHorizontal:10,
   },
-  buttonWrapper: { // Butonlar için sarmalayıcı
-    width: '90%',
-    marginVertical: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
+  actionButton: {
+    width: '100%',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+    flexDirection: 'row',
   },
-  mnemonicContainer: {
-    marginVertical: 20,
-    padding: 15,
-    borderColor: '#D1D1D6',
-    borderWidth: 1,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    width: '95%',
-    alignItems: 'center', // İçeriği ortala
+  primaryButton: {
+    backgroundColor: '#007AFF',
   },
-  mnemonicWarning: {
-    fontSize: 14,
-    color: '#FF3B30', // Kırmızı uyarı rengi
-    textAlign: 'center',
-    marginBottom: 15,
+  confirmButton: {
+    backgroundColor: '#34C759',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderColor: '#007AFF',
+    borderWidth: 1.5,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  buttonTextSecondary: {
+    color: '#007AFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  activityIndicator: {
+    marginRight: 8, // Buton metni ile arasında boşluk için
+  },
+  mnemonicHeader: {
+    fontSize: 22,
     fontWeight: 'bold',
-  },
-  mnemonicText: {
-    fontSize: 17, // Biraz büyütüldü
-    fontWeight: '500', // Yarı-kalın
+    color: '#E0E0E0',
+    marginBottom: 10,
     textAlign: 'center',
-    color: '#1C1C1E',
-    letterSpacing: 0.5, // Harf aralığı
-    lineHeight: 24, // Satır yüksekliği
+  },
+  mnemonicSubheader: {
+    fontSize: 14,
+    color: '#FF6B6B', // Uyarı için farklı bir kırmızı tonu
+    textAlign: 'center',
+    marginBottom: 25,
+    fontWeight: '500',
+    paddingHorizontal: 15,
+    lineHeight: 20,
+  },
+  mnemonicGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around', // Daha dengeli dağılım
+    width: '100%',
+    marginBottom: 30,
+    backgroundColor: '#1C1C1E', // Kelime kartları için arkaplan
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
+  wordCard: {
+    width: '46%', // İki sütun, biraz boşlukla
+    backgroundColor: '#2C2C2E', // Kelime kartı arka planı
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 12,
+    alignItems: 'center',
+    flexDirection: 'row', // Numara ve kelime yan yana
+  },
+  wordIndex: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#8E8E93', // Numara rengi
+    marginRight: 10,
+  },
+  wordValue: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#E0E0E0', // Kelime rengi
+    flexShrink: 1, // Uzun kelimeler için
   },
 });
 

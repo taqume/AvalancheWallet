@@ -103,7 +103,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ title, value, onCopy, warningText, is
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: '#121212', // Koyu tema arka planı
   },
   scrollContent: {
     flexGrow: 1,
@@ -118,12 +118,12 @@ const styles = StyleSheet.create({
     fontSize: 24, // Biraz daha büyük
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#1C1C1E',
+    color: '#E0E0E0', // Koyu tema metin rengi
     textAlign: 'center',
   },
   importantWarning: {
     fontSize: 15,
-    color: '#D93025', // Koyu kırmızı uyarı rengi
+    color: '#FF6B6B', // Koyu tema için canlı uyarı rengi
     textAlign: 'center',
     paddingHorizontal: 10,
     marginBottom: 25,
@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
   },
   infoBoxContainer: { // infoBox -> infoBoxContainer olarak değiştirildi
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1C1C1E', // Koyu tema eleman arka planı
     borderRadius: 12, // Daha yuvarlak kenarlar
     padding: 18, // Padding artırıldı
     marginBottom: 20,
-    shadowColor: "#000",
+    shadowColor: "#000", // Gölge koyu temada da kalabilir
     shadowOffset: {
       width: 0,
       height: 2, // Gölge biraz daha belirgin
@@ -149,18 +149,18 @@ const styles = StyleSheet.create({
     fontSize: 17, // Biraz daha büyük
     fontWeight: '600',
     marginBottom: 10,
-    color: '#1C1C1E',
+    color: '#E0E0E0', // Koyu tema metin rengi
   },
   infoDetail: {
     fontSize: 15,
-    color: '#3C3C43',
+    color: '#E0E0E0', // Koyu tema ana metin rengi
     marginBottom: 10,
     fontFamily: 'monospace',
     lineHeight: 22,
   },
   infoDetailMuted: {
     fontSize: 15,
-    color: '#8E8E93', // Gizliyken daha soluk renk
+    color: '#8E8E93', // Koyu tema ikincil metin rengi (uygun)
     fontFamily: 'monospace',
     lineHeight: 22,
     flexShrink: 1, // Uzun metinlerin taşmasını engelle
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#2C2C2E', // Koyu tema iç eleman arka planı
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   copyButton: {
-    backgroundColor: '#E5E5EA', // Açık gri buton
+    backgroundColor: '#2C2C2E', // Koyu tema buton arka planı
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 6,
@@ -188,18 +188,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   copyButtonText: {
-    color: '#007AFF', // Mavi metin
+    color: '#007AFF', // Vurgu rengi (kalsın)
     fontWeight: '500',
     fontSize: 14,
   },
   warningText: {
     fontSize: 13,
-    color: '#666666', // Normal uyarı için biraz daha koyu gri
+    color: '#AEAEB2', // Koyu tema ikincil metin rengi
     fontStyle: 'italic',
     lineHeight: 18,
   },
   warningTextSensitive: {
-    color: '#FF9500', // Hassas veri uyarısı için turuncu
+    color: '#FFD580', // Koyu tema için canlı hassas uyarı rengi
     fontWeight: '500',
   },
   buttonWrapper: {

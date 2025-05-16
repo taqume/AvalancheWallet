@@ -11,6 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../App';
@@ -35,8 +36,8 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
     try {
       let walletDetails;
       if (importType === 'mnemonic') {
-        if (!mnemonicInput.trim() || mnemonicInput.trim().split(' ').length !== 12) {
-          Alert.alert("Geçersiz Giriş", "Lütfen 12 adet kurtarma kelimesi girin.");
+        if (!mnemonicInput.trim() || mnemonicInput.trim().split(' ').length < 12) {
+          Alert.alert("Geçersiz Giriş", "Lütfen en az 12 adet kurtarma kelimesi girin.");
           setIsLoading(false);
           return;
         }
@@ -47,7 +48,6 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
           setIsLoading(false);
           return;
         }
-        // Basit bir hex kontrolü (ethers.js daha detaylı kontrol yapacaktır)
         if (!/^(0x)?[0-9a-fA-F]{64}$/.test(privateKeyInput.trim())) {
             Alert.alert("Geçersiz Özel Anahtar", "Özel anahtar formatı hatalı görünüyor. Lütfen kontrol edin.");
             setIsLoading(false);
@@ -56,12 +56,8 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
         walletDetails = deriveWalletFromPrivateKey(privateKeyInput.trim());
       }
 
-      // Başarılı içe aktarma sonrası Home ekranına yönlendir
-      // TODO: İçe aktarılan cüzdan bilgilerini (adres, anahtar vb.) güvenli bir şekilde saklamak gerekebilir (EncryptedStorage vb.)
-      // Şimdilik sadece Home'a yönlendiriyoruz, Home ekranı bu bilgileri parametre olarak almayacak şekilde güncellenebilir
-      // ya da bir state management çözümü (Context API, Redux, Zustand) kullanılabilir.
       Alert.alert("Başarılı!", "Cüzdanınız başarıyla içe aktarıldı.", [
-        { text: "Tamam", onPress: () => navigation.replace('Home') }, // replace ile geri dönüşte bu ekrana gelinmez
+        { text: "Harika!", onPress: () => navigation.replace('Home') },
       ]);
 
     } catch (error: any) {
@@ -85,6 +81,7 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 style={[styles.segmentButton, importType === 'mnemonic' && styles.segmentButtonActive]}
                 onPress={() => setImportType('mnemonic')}
+                disabled={isLoading}
               >
                 <Text style={[styles.segmentButtonText, importType === 'mnemonic' && styles.segmentButtonTextActive]}>
                   12 Kelime
@@ -93,6 +90,7 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 style={[styles.segmentButton, importType === 'privateKey' && styles.segmentButtonActive]}
                 onPress={() => setImportType('privateKey')}
+                disabled={isLoading}
               >
                 <Text style={[styles.segmentButtonText, importType === 'privateKey' && styles.segmentButtonTextActive]}>
                   Özel Anahtar
@@ -102,17 +100,19 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
 
             {importType === 'mnemonic' ? (
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Kurtarma Kelimeleri (12 adet, boşluklarla ayırın):</Text>
+                <Text style={styles.label}>Kurtarma Kelimeleri (Boşluklarla ayırın):</Text>
                 <TextInput
                   style={styles.inputLarge}
-                  placeholder="örn: kelime1 kelime2 kelime3 ... kelime12"
+                  placeholder="örn: kelime1 kelime2 kelime3 ..."
+                  placeholderTextColor="#6E6E73"
                   onChangeText={setMnemonicInput}
                   value={mnemonicInput}
                   multiline={true}
-                  numberOfLines={3}
+                  numberOfLines={4}
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!isLoading}
+                  keyboardAppearance="dark"
                 />
               </View>
             ) : (
@@ -121,27 +121,35 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   placeholder="örn: 0x... veya sadece harf/rakam dizisi"
+                  placeholderTextColor="#6E6E73"
                   onChangeText={setPrivateKeyInput}
                   value={privateKeyInput}
-                  secureTextEntry={true}
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!isLoading}
+                  keyboardAppearance="dark"
                 />
               </View>
             )}
 
-            <View style={styles.buttonWrapper}>
-              <Button 
-                title={isLoading ? "İçe Aktarılıyor..." : "Cüzdanı İçe Aktar"} 
-                onPress={handleImport} 
-                disabled={isLoading}
-                color="#007AFF"
-              />
-            </View>
-            <View style={styles.buttonWrapper}>
-              <Button title="Geri Dön" onPress={() => navigation.goBack()} disabled={isLoading}/>
-            </View>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.primaryButton, isLoading && styles.buttonDisabled]} 
+              onPress={handleImport} 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" style={styles.activityIndicator} />
+              ) : (
+                <Text style={styles.buttonText}>Cüzdanı İçe Aktar</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.secondaryButton, isLoading && styles.buttonDisabled]} 
+              onPress={() => navigation.goBack()} 
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonTextSecondary}>Geri Dön</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -152,7 +160,7 @@ const ImportWalletScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: '#121212',
   },
   scrollContent: {
     flexGrow: 1,
@@ -161,77 +169,108 @@ const styles = StyleSheet.create({
   content: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 25,
+    paddingVertical: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 25,
-    color: '#1C1C1E',
+    marginBottom: 30,
+    color: '#E0E0E0',
     textAlign: 'center',
   },
   segmentedControlContainer: {
     flexDirection: 'row',
-    marginBottom: 25,
-    backgroundColor: '#E5E5EA',
-    borderRadius: 8,
+    marginBottom: 30,
+    backgroundColor: '#2C2C2E',
+    borderRadius: 10,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3A3A3C',
   },
   segmentButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   segmentButtonActive: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 7, // Aktifken içten border gibi görünmesi için
-    margin: 1.5, // Aktifken arkaplandan biraz ayırmak için
+    backgroundColor: '#007AFF',
+    borderRadius: 8, 
+    margin: 2,
   },
   segmentButtonText: {
     fontSize: 15,
-    color: '#007AFF',
+    color: '#8E8E93',
+    fontWeight: '500',
   },
   segmentButtonTextActive: {
-    color: '#007AFF',
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   inputContainer: {
-    width: '95%',
+    width: '100%',
     marginBottom: 20,
   },
   label: {
     fontSize: 15,
-    color: '#3C3C43',
-    marginBottom: 8,
+    color: '#AEAEB2',
+    marginBottom: 10,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1C1C1E',
     borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 8,
+    borderColor: '#3A3A3C',
+    borderRadius: 10,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
-    color: '#1C1C1E',
+    color: '#FFFFFF',
   },
   inputLarge: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1C1C1E',
     borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 8,
+    borderColor: '#3A3A3C',
+    borderRadius: 10,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
-    color: '#1C1C1E',
-    minHeight: 80, // Mnemonic için daha geniş alan
+    color: '#FFFFFF',
+    minHeight: 100, 
     textAlignVertical: 'top',
   },
-  buttonWrapper: {
-    width: '90%',
-    marginVertical: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
+  actionButton: {
+    width: '100%',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+    flexDirection: 'row',
+  },
+  primaryButton: {
+    backgroundColor: '#007AFF',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderColor: '#007AFF',
+    borderWidth: 1.5,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  buttonTextSecondary: {
+    color: '#007AFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  activityIndicator: {
+    marginRight: 10,
   },
 });
 
